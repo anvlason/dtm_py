@@ -1,4 +1,4 @@
-#import numpy as np
+import numpy as np
 import scipy
 from scipy import signal
 import scipy.ndimage as ndimage
