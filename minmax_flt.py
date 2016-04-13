@@ -112,10 +112,13 @@ def dtm_rank2(data,size,tr):
     out[mask]=data[mask]-diff[mask]
     return out
 
+if len(sys.argv) < 2:
+    sys.exit(0)
 
-fname = 'DSM_8x_RAW_flt.tif'
+	
+fname = sys.argv[1]#'DSM_8x_RAW_flt.tif'
 #fname = 'lenag.png'
-oname = 'DSM_8x_RAW_flt_rank90_it5_t1.tif'
+oname = os.path.splitext(fname)[0] + '_dtm.tif'#'DSM_8x_RAW_flt_rank90_it5_t1.tif'
 #oname = 'lenag_out.tif'
 neighborhood_size = np.ones((5,5))
 threshold = 15
@@ -128,13 +131,13 @@ data[data==-9999]=np.NAN
 print "DTM rank filter"
 #out=dtm_rank(data,(8,90))
 #out=dtm_rank(data,(3,400))
-for i in range(0,15):
+for i in range(0,10):
     print "mean data", np.nanmean(data)
-    out=dtm_rank2(data,(3,90),1.0)
+    out=dtm_rank2(data,(1,51),0.5)
     data=out
 #out[out<0]=np.NAN
 #out=local_diff(data,9)
-out[out>300]=np.NAN
+#out[out>300]=np.NAN
 nd=-9999
 print "Save"
 #save
