@@ -3,15 +3,6 @@ import scipy
 from scipy import signal
 import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
-import matplotlib.pyplot as plt
-import sys
-from osgeo import gdal
-from osgeo.gdalconst import *
-#import numpy as np
-import numpy.ma as ma
-import os.path
-gdal.AllRegister()
-gdal.UseExceptions()
 
 #--------------------------------------------
 def fspecial_gauss(size, sigma):
@@ -111,63 +102,4 @@ def dtm_rank2(data,size,tr):
     mask = diff>tr
     out[mask]=data[mask]-diff[mask]
     return out
-
-if len(sys.argv) < 2:
-    sys.exit(0)
-
-	
-fname = sys.argv[1]#'DSM_8x_RAW_flt.tif'
-#fname = 'lenag.png'
-oname = os.path.splitext(fname)[0] + '_dtm.tif'#'DSM_8x_RAW_flt_rank90_it5_t1.tif'
-#oname = 'lenag_out.tif'
-neighborhood_size = np.ones((5,5))
-threshold = 15
-nbands = 1
-ds = gdal.Open(fname,gdal.GA_ReadOnly)
-#data = scipy.misc.imread(fname)
-nd=ds.GetRasterBand(1).GetNoDataValue()
-data=ds.GetRasterBand(1).ReadAsArray().astype(np.float_)
-data[data==-9999]=np.NAN
-sdata=np.copy(data)
-print "DTM rank filter"
-#out=dtm_rank(data,(8,90))
-#out=dtm_rank(data,(3,400))
-for i in range(0,3):
-    print "mean data", np.nanmean(data)
-    out=dtm_rank2(data,(3,21),0.5)
-    data=out
-#out[out<0]=np.NAN
-#out=local_diff(data,9)
-#out[out>300]=np.NAN
-#out=filters.median_filter(data,(3,3))
-diff = sdata-out
-mask = diff>3
-sdata[mask]=sdata[mask]-diff[mask]
-out=filters.median_filter(sdata,(3,3))
-
-
-nd=-9999
-print "Save"
-#save
-OutDataType=gdal.GDT_Float32
-driver=gdal.GetDriverByName("Gtiff")
-ods=driver.Create(oname,data.shape[1],data.shape[0],nbands,OutDataType)
-ods.SetGeoTransform(ds.GetGeoTransform())
-ods.SetProjection(ds.GetProjection())
-ob=ods.GetRasterBand(1)
-ob.SetNoDataValue(nd)
-ob.WriteArray(out,0,0)
-"""
-ob=ods.GetRasterBand(2)
-ob.WriteArray(out1,0,0)
-ob=ods.GetRasterBand(3)
-ob.WriteArray(out2,0,0)
-ob=ods.GetRasterBand(4)
-ob.WriteArray(out3,0,0)
-"""
-
-print "done"
-
-ob=None
-ods=None
 
