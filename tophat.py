@@ -128,8 +128,26 @@ def dtm_rank2i(data,size,tr):
 
 #--------------------------------------------
 
+def pad(data):
+    bad_indexes = np.isnan(data)
+    good_indexes = np.logical_not(bad_indexes)
+    good_data = data[good_indexes]
+    interpolated = np.interp(bad_indexes.nonzero()[0], good_indexes.nonzero()[0], good_data)
+    data[bad_indexes] = interpolated
+    return data
+
+#A = np.apply_along_axis(pad, 0, A)
+#--------------------------------------------
+def probint(X):
+    nans    = np.array( np.where(  np.isnan(X) ) ).T
+    notnans = np.array( np.where( ~np.isnan(X) ) ).T
+    for p in nans:
+        X[p[0],p[1]] = sum( X[q[0],q[1]]*np.exp(-(sum((p-q)**2))/2) for q in notnans )
+    return X
+#--------------------------------------------
+	
 if len(sys.argv) < 5:
-    print "Usage: minmax_flt.py [h] [w] [it] [input] <invert> <out>"
+    print "Usage: tophat.py [h] [w] [it] [input] <invert> <out>"
     sys.exit(0)
 
 
@@ -142,7 +160,7 @@ try:
     oname = sys.argv[6]
 except:
 #if (!oname):
-    oname = os.path.splitext(fname)[0] + '_dtm_flt.tif'#'DSM_8x_RAW_flt_rank90_it5_t1.tif'
+    oname = os.path.splitext(fname)[0] + '_dtm_bth_flt.tif'#'DSM_8x_RAW_flt_rank90_it5_t1.tif'
 #oname = 'lenag_out.tif'
 neighborhood_size = np.ones((5,5))
 threshold = 15
@@ -153,31 +171,66 @@ nd=ds.GetRasterBand(1).GetNoDataValue()
 data=ds.GetRasterBand(1).ReadAsArray().astype(np.float_)
 back_mask=(data==-9999)
 data[back_mask]=np.NAN
-sdata=np.copy(data)
-mean_data = np.nanmean(data);
-data[back_mask]=mean_data
-print "DTM rank filter"
+back_mask=(data==nd)
+data[back_mask]=np.NAN
+#sdata=np.copy(data)
+#mean_data = np.nanmean(data);
+#data[back_mask]=mean_data
+print "Top Hat filter"
 #out=dtm_rank(data,(8,90))
 #out=dtm_rank(data,(3,400))
-if invert==None:
+#if invert==None:
+#    for i in range(0,it):
+#        print "mean data", np.nanmean(data)
+#        out=dtm_rank2(data,(h,w),0.5)
+#        data=out
+#else:
+#    for i in range(0,it):
+#        print "mean data", np.nanmean(data)
+#        out=dtm_rank2i(data,(h,w),0.5)
+#        data=out
+#
+##out[out<0]=np.NAN
+##out=local_diff(data,9)
+##out[out>300]=np.NAN
+##out=filters.median_filter(data,(3,3))
+#diff = sdata-out
+#mask = diff>3
+#sdata[mask]=sdata[mask]-diff[mask]
+#out=filters.median_filter(sdata,(3,3))
+
+#bth=ndimage.morphology.black_tophat(data,(3,11))
+#bth=ndimage.morphology.white_tophat(data,(3,11))
+#out=np.copy(data)
+#mask=bth>1
+#out[mask]=np.NAN#data[mask]+bth[mask]
+
+#gauss = filters.gaussian_filter(fdata,9)
+lim = 1
+if invert==0:
     for i in range(0,it):
-        print "mean data", np.nanmean(data)
-        out=dtm_rank2(data,(h,w),0.5)
-        data=out
+        print "white top hat iteration %d from %d"%(i+1,it)
+        th=ndimage.morphology.white_tophat(data,(h,w))
+        bmask=th > lim
+        data[bmask]-=th[bmask]
+elif invert==1:
+    for i in range(0,it):
+        print "black top hat iteration %d from %d"%(i+1,it)
+        th=ndimage.morphology.black_tophat(data,(h,w))
+        bmask=th > lim
+        data[bmask]+=th[bmask]
 else:
     for i in range(0,it):
-        print "mean data", np.nanmean(data)
-        out=dtm_rank2i(data,(h,w),0.5)
-        data=out
-
-#out[out<0]=np.NAN
-#out=local_diff(data,9)
-#out[out>300]=np.NAN
-#out=filters.median_filter(data,(3,3))
-diff = sdata-out
-mask = diff>3
-sdata[mask]=sdata[mask]-diff[mask]
-out=filters.median_filter(sdata,(3,3))
+        print "combined top hat iteration %d from %d"%(i+1,it)
+        th=ndimage.morphology.black_tophat(data,(h,w))
+        bmask=th > lim
+        data[bmask]+=th[bmask]
+        th=None
+        bnmask=None
+        th=ndimage.morphology.white_tophat(data,(h,w))
+        bmask=th > lim
+        data[bmask]-=th[bmask]
+out=data
 
 
 nd=-9999

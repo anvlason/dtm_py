@@ -17,16 +17,17 @@ gdal.UseExceptions()
 #    sys.exit(0)
 
 	
-#fname = sys.argv[1]#'DSM_8x_RAW_flt.tif'
-fname = 'I:\\RF\\bakhchisaray\\dsm_8x.tif'
-oname = os.path.splitext(fname)[0] + '_dtm.tif'#'DSM_8x_RAW_flt_rank90_it5_t1.tif'
-
-print oname
+fname = sys.argv[1]#'DSM_8x_RAW_flt.tif'
+#fname = 'I:\\RF\\bakhchisaray\\dsm_8x.tif'
+oname = os.path.splitext(fname)[0] + '_flt.tif'#'DSM_8x_RAW_flt_rank90_it5_t1.tif'
 
 nbands = 2
 thresh = 0.75
-rmin = 130
-rmax = 400
+rmin = sys.argv[2]
+rmax = sys.argv[3]
+
+print oname
+print "rmin=%f rmax=%f",(rmin,rmax)
 
 ds = gdal.Open(fname,gdal.GA_ReadOnly)
 nd=ds.GetRasterBand(1).GetNoDataValue()
