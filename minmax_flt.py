@@ -121,7 +121,7 @@ def dtm_rank2i(data,size,tr):
     rX = filters.rank_filter(rX,rmax,(size[0],size[1]))
     rY = filters.rank_filter(rY,rmax,(size[1],size[0]))
     diff = data-((rX+rY)/2.0)
-    out = data[:,:]
+    out = np.copy(data)#data[:,:]
     mask = diff>tr
     out[mask]=data[mask]+diff[mask]
     return out
@@ -144,6 +144,9 @@ except:
 #if (!oname):
     oname = os.path.splitext(fname)[0] + '_dtm_flt.tif'#'DSM_8x_RAW_flt_rank90_it5_t1.tif'
 #oname = 'lenag_out.tif'
+print "fiter parameters:"
+print "width=%d"%w
+print "height=%d"%h
 neighborhood_size = np.ones((5,5))
 threshold = 15
 nbands = 1
@@ -159,14 +162,16 @@ data[back_mask]=mean_data
 print "DTM rank filter"
 #out=dtm_rank(data,(8,90))
 #out=dtm_rank(data,(3,400))
-if invert==None:
+if invert==0:
     for i in range(0,it):
         print "mean data", np.nanmean(data)
+        print "normal mode"
         out=dtm_rank2(data,(h,w),0.5)
         data=out
 else:
     for i in range(0,it):
         print "mean data", np.nanmean(data)
+        print "invert mode"
         out=dtm_rank2i(data,(h,w),0.5)
         data=out
 

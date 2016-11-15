@@ -15,7 +15,7 @@ mask = im > im.mean()
 label_im, nb_labels = ndimage.label(mask)
 
 sizes = ndimage.sum(mask, label_im, range(nb_labels + 1))
-mask_size = sizes < 1000
+mask_size = sizes < 10
 remove_pixel = mask_size[label_im]
 label_im[remove_pixel] = 0
 labels = np.unique(label_im)
